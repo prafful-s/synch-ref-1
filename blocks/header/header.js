@@ -54,6 +54,8 @@ function closeOnFocusLost(e) {
   }
 }
 
+// a custom message to check the changes
+
 function openOnKeydown(e) {
   const focused = document.activeElement;
   const isNavDrop = focused.className === 'nav-drop';
