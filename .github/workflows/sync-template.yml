@@ -55,6 +55,7 @@ jobs:
         fi
 
     - name: Create pull request with updates
+      id: sync-changes
       if: steps.check-updates.outputs.has_updates == 'true'
       run: |
         # Create a new branch for the sync
@@ -76,7 +77,17 @@ jobs:
         done
         
         # Merge only from template main branch
-        git merge template/main --no-edit --allow-unrelated-histories
+        # Set merge strategy to handle conflicts
+        if git merge template/main --no-edit --allow-unrelated-histories; then
+          echo "✅ Merge completed successfully"
+          MERGE_STATUS="success"
+        else
+          echo "⚠️ Merge has conflicts - will create PR for manual resolution"
+          MERGE_STATUS="conflicts"
+          # Add all files including conflicted ones
+          git add .
+          git commit -m "WIP: Template sync with conflicts - needs manual resolution" || true
+        fi
         
         # Restore ignored files after merge
         for file in "${IGNORE_FILES[@]}"; do
@@ -94,15 +105,43 @@ jobs:
         # Push the branch
         git push origin "$BRANCH_NAME"
         
-        # Create pull request using GitHub CLI
-        gh pr create \
-          --title "🔄 Sync template repository - $(date +%Y-%m-%d)" \
-          --body "This PR syncs the latest changes from the template repository.
+        # Store merge status for PR creation
+        echo "merge_status=$MERGE_STATUS" >> $GITHUB_OUTPUT
+        
+        # Create pull request using GitHub CLI with appropriate message
+        if [ "$MERGE_STATUS" = "conflicts" ]; then
+          PR_TITLE="⚠️ Sync template repository (HAS CONFLICTS) - $(date +%Y-%m-%d)"
+          PR_BODY="This PR syncs the latest changes from the template repository.
           
+        **⚠️ MERGE CONFLICTS DETECTED**
+        
+        This PR contains merge conflicts that need to be resolved manually.
+        Please review the conflicts, resolve them, and then merge.
+        
         **Template commit:** \`${{ steps.check-updates.outputs.template_commit }}\`
         **Sync date:** $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)
         
-        Please review the changes and merge if everything looks good." \
+        ## How to resolve conflicts:
+        1. Review the files with conflicts in the 'Files changed' tab
+        2. Click 'Resolve conflicts' button in GitHub UI
+        3. Edit the files to resolve conflicts
+        4. Mark as resolved and commit
+        5. Merge the PR"
+        else
+          PR_TITLE="🔄 Sync template repository - $(date +%Y-%m-%d)"
+          PR_BODY="This PR syncs the latest changes from the template repository.
+          
+        **✅ No conflicts detected**
+        
+        **Template commit:** \`${{ steps.check-updates.outputs.template_commit }}\`
+        **Sync date:** $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)
+        
+        Please review the changes and merge if everything looks good."
+        fi
+        
+        gh pr create \
+          --title "$PR_TITLE" \
+          --body "$PR_BODY" \
           --base main \
           --head "$BRANCH_NAME"
       env:

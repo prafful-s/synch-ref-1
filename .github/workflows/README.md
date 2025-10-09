@@ -40,6 +40,8 @@ Make sure your repository has the following settings:
 
 - ✅ **Automatic Detection**: Only runs when there are actual updates
 - ✅ **Pull Request Creation**: Creates PRs for easy review and merging
+- ✅ **Conflict Handling**: Gracefully handles merge conflicts with clear instructions
+- ✅ **File Protection**: Preserves specified custom files during sync
 - ✅ **Detailed Information**: Includes commit hashes and sync timestamps
 - ✅ **Manual Override**: Can be triggered manually when needed
 - ✅ **Safe Merging**: Uses `--allow-unrelated-histories` for initial syncs
@@ -96,10 +98,40 @@ If you encounter permission errors:
 3. Ensure the template repository is public or accessible
 
 ### Merge Conflicts
-If there are merge conflicts:
-1. The workflow will create a PR with conflicts
-2. Resolve conflicts manually in the PR
-3. Merge the PR when ready
+The workflow automatically handles merge conflicts gracefully:
+
+**What happens:**
+1. ✅ The workflow detects conflicts during merge
+2. ✅ Creates a PR with the conflict markers
+3. ✅ Labels the PR title with "⚠️ HAS CONFLICTS"
+4. ✅ Provides instructions in the PR description
+
+**How to resolve:**
+1. Open the PR created by the workflow
+2. Click the "Resolve conflicts" button in GitHub UI
+3. Edit the files to choose which changes to keep
+4. Mark each file as resolved
+5. Commit the resolution
+6. Review and merge the PR
+
+**Alternative (Command Line):**
+```bash
+# Checkout the sync branch
+git checkout sync-template-YYYYMMDD-HHMMSS
+
+# View conflicted files
+git status
+
+# Edit conflicted files manually
+# Look for <<<<<<< HEAD, =======, >>>>>>> markers
+
+# After resolving, add and commit
+git add .
+git commit -m "Resolve merge conflicts"
+git push
+
+# Then merge the PR in GitHub
+```
 
 ### Template Repository Not Found
 Make sure:
