@@ -1,0 +1,115 @@
+name: Sync Template Repository
+
+on:
+  workflow_dispatch: # Manual triggering only
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync-template:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout current repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+        ref: main  # Ensure we're working with main branch
+
+    - name: Configure Git
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        
+    - name: Ensure we're on main branch
+      run: |
+        # Switch to main branch and ensure it's up to date
+        git checkout main
+        git pull origin main
+
+    - name: Add template repository as remote
+      run: |
+        # Template repository: prafful-s/synch-main
+        git remote add template https://github.com/prafful-s/synch-main.git
+        # Fetch only the main branch from template
+        git fetch template main
+
+    - name: Check for updates
+      id: check-updates
+      run: |
+        # Get the latest commit from template
+        TEMPLATE_LATEST=$(git rev-parse template/main)
+        CURRENT_LATEST=$(git rev-parse HEAD)
+        
+        echo "Template latest: $TEMPLATE_LATEST"
+        echo "Current latest: $CURRENT_LATEST"
+        
+        if [ "$TEMPLATE_LATEST" != "$CURRENT_LATEST" ]; then
+          echo "has_updates=true" >> $GITHUB_OUTPUT
+          echo "template_commit=$TEMPLATE_LATEST" >> $GITHUB_OUTPUT
+        else
+          echo "has_updates=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create pull request with updates
+      if: steps.check-updates.outputs.has_updates == 'true'
+      run: |
+        # Create a new branch for the sync
+        BRANCH_NAME="sync-template-$(date +%Y%m%d-%H%M%S)"
+        git checkout -b "$BRANCH_NAME"
+        
+        # Define files to ignore during sync (add your custom files here)
+        IGNORE_FILES=(
+          "paths.json"
+          "fstab.yaml"
+        )
+        
+        # Backup ignored files before merge
+        for file in "${IGNORE_FILES[@]}"; do
+          if [ -e "$file" ]; then
+            echo "Backing up: $file"
+            cp -r "$file" "$file.backup" 2>/dev/null || true
+          fi
+        done
+        
+        # Merge only from template main branch
+        git merge template/main --no-edit --allow-unrelated-histories
+        
+        # Restore ignored files after merge
+        for file in "${IGNORE_FILES[@]}"; do
+          if [ -e "$file.backup" ]; then
+            echo "Restoring: $file"
+            rm -rf "$file" 2>/dev/null || true
+            mv "$file.backup" "$file" 2>/dev/null || true
+          fi
+        done
+        
+        # Add and commit the restored files
+        git add .
+        git commit -m "Restore custom files after template sync" || true
+        
+        # Push the branch
+        git push origin "$BRANCH_NAME"
+        
+        # Create pull request using GitHub CLI
+        gh pr create \
+          --title "🔄 Sync template repository - $(date +%Y-%m-%d)" \
+          --body "This PR syncs the latest changes from the template repository.
+          
+        **Template commit:** \`${{ steps.check-updates.outputs.template_commit }}\`
+        **Sync date:** $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)
+        
+        Please review the changes and merge if everything looks good." \
+          --base main \
+          --head "$BRANCH_NAME"
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: No updates available
+      if: steps.check-updates.outputs.has_updates == 'false'
+      run: |
+        echo "✅ No updates available from template repository"
+        echo "Current repository is up to date with template."
