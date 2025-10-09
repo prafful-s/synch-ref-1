@@ -14,15 +14,26 @@ git remote add template https://github.com/prafful-s/synch-main.git
 
 If you created this repository using "Use this template" from `prafful-s/synch-main`, no configuration changes are needed.
 
-### 2. Required Permissions
+### 2. Enable GitHub Actions Permissions
 
-The workflow requires the following permissions:
+**⚠️ IMPORTANT**: You must enable PR creation for GitHub Actions in your repository settings:
+
+1. Go to your repository **Settings**
+2. Navigate to **Actions** → **General** (in the left sidebar)
+3. Scroll down to **"Workflow permissions"**
+4. Select **"Read and write permissions"**
+5. ✅ **Check** "Allow GitHub Actions to create and approve pull requests"
+6. Click **"Save"**
+
+Without this setting, you'll get an error: `GitHub Actions is not permitted to create or approve pull requests`
+
+### 3. Required Permissions
+
+The workflow requires the following permissions (already configured in the workflow file):
 - `contents: write` - To create branches and push changes
 - `pull-requests: write` - To create pull requests
 
-These are already configured in the workflow file.
-
-### 3. Repository Settings
+### 4. Repository Settings
 
 Make sure your repository has the following settings:
 - GitHub Actions are enabled
@@ -33,8 +44,23 @@ Make sure your repository has the following settings:
 1. **Manual Trigger**: Trigger the workflow manually from the "Actions" tab in your repository
 2. **Update Check**: It fetches the latest changes from the template repository (`prafful-s/synch-main`)
 3. **Smart Sync**: Only creates a pull request if there are actual updates
-4. **File Protection**: Preserves your custom files (`paths.json`, `fstab.yaml`) during sync
-5. **Pull Request**: Creates a PR with all the template changes for review and merging
+4. **Smart Merge Strategy**: Uses `-X theirs` to prefer template changes, avoiding false conflicts
+5. **File Protection**: Preserves your custom files (`paths.json`, `fstab.yaml`) during sync
+6. **Pull Request**: Creates a PR with all the template changes for review and merging
+
+### Understanding the Merge Strategy
+
+When you create a repository using "Use this template", GitHub creates a **new repository with no shared git history** with the template. This means:
+
+- Template repo: Has commits A → B → C → D
+- Your repo: Has a single initial commit X with all files
+
+When syncing, git sees these as **unrelated histories**. The workflow handles this by:
+
+1. Using `--allow-unrelated-histories` to allow the merge
+2. Using `-X theirs` (merge strategy) to automatically prefer template changes
+3. This prevents false conflicts when your repo hasn't modified files
+4. Protected files (`paths.json`, `fstab.yaml`) are still preserved via backup/restore
 
 ## Workflow Features
 
@@ -98,9 +124,15 @@ If you encounter permission errors:
 3. Ensure the template repository is public or accessible
 
 ### Merge Conflicts
-The workflow automatically handles merge conflicts gracefully:
 
-**What happens:**
+The workflow uses smart merge strategies to minimize conflicts, but they can still occur in these scenarios:
+
+**When conflicts happen:**
+- You've modified the same lines in the same files as the template updates
+- Binary files have changed in both repositories
+- Files were moved/renamed in different ways
+
+**What the workflow does:**
 1. ✅ The workflow detects conflicts during merge
 2. ✅ Creates a PR with the conflict markers
 3. ✅ Labels the PR title with "⚠️ HAS CONFLICTS"

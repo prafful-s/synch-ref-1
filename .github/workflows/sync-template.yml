@@ -76,13 +76,15 @@ jobs:
           fi
         done
         
-        # Merge only from template main branch
-        # Set merge strategy to handle conflicts
-        if git merge template/main --no-edit --allow-unrelated-histories; then
+        # Merge from template with strategy to prefer template changes
+        # Use -X theirs to automatically resolve conflicts by preferring template version
+        # This works well since we're syncing FROM the template TO the child
+        # Protected files are handled separately via backup/restore
+        if git merge template/main -X theirs --no-edit --allow-unrelated-histories; then
           echo "✅ Merge completed successfully"
           MERGE_STATUS="success"
         else
-          echo "⚠️ Merge has conflicts - will create PR for manual resolution"
+          echo "⚠️ Merge failed - will create PR for manual resolution"
           MERGE_STATUS="conflicts"
           # Add all files including conflicted ones
           git add .
