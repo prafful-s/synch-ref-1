@@ -58,8 +58,17 @@ jobs:
       id: sync-changes
       if: steps.check-updates.outputs.has_updates == 'true'
       run: |
+        # Create an archive branch from current state before syncing
+        ARCHIVE_BRANCH="main-archive-$(date +%Y%m%d)"
+        echo "Creating archive branch: $ARCHIVE_BRANCH"
+        git checkout -b "$ARCHIVE_BRANCH"
+        git push origin "$ARCHIVE_BRANCH"
+        
+        # Switch back to main for the sync
+        git checkout main
+        
         # Create a new branch for the sync
-        BRANCH_NAME="sync-template-$(date +%Y%m%d-%H%M%S)"
+        BRANCH_NAME="sync-ref-demo-template-$(date +%Y%m%d-%H%M%S)"
         git checkout -b "$BRANCH_NAME"
         
         # Define files to ignore during sync (add your custom files here)
@@ -122,6 +131,7 @@ jobs:
         
         **Template commit:** \`${{ steps.check-updates.outputs.template_commit }}\`
         **Sync date:** $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)
+        **Archive branch:** \`$ARCHIVE_BRANCH\` (backup of state before sync)
         
         ## How to resolve conflicts:
         1. Review the files with conflicts in the 'Files changed' tab
@@ -137,6 +147,7 @@ jobs:
         
         **Template commit:** \`${{ steps.check-updates.outputs.template_commit }}\`
         **Sync date:** $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)
+        **Archive branch:** \`$ARCHIVE_BRANCH\` (backup of state before sync)
         
         Please review the changes and merge if everything looks good."
         fi
