@@ -1,6 +1,46 @@
-# Template Sync Workflow
+# Template Sync Workflows
 
-This GitHub Actions workflow syncs your repository with the main template repository (`prafful-s/synch-main`). It can be triggered manually from the Actions tab.
+This repository includes **two workflows** for syncing with the main template repository (`prafful-s/synch-main`):
+
+## 🔄 Workflow 1: Sync with Template (Create PR for Review)
+**File:** `sync-template.yml`
+
+Creates a **Pull Request** with template changes for review before merging.
+
+**Use when:**
+- You want to review changes before they go live
+- You've made custom modifications to files
+- You need time to test the updates
+- You want team review before merging
+
+## ⚡ Workflow 2: Sync with Template (Direct Merge - No Review)
+**File:** `sync-template-direct.yml`
+
+**Directly merges** template changes to main branch without creating a PR.
+
+**Use when:**
+- You trust the template updates completely
+- You want quick syncing without PR overhead
+- Your repository has minimal customizations
+- You need faster updates without review process
+
+**⚠️ Caution:** This workflow will fail and abort if merge conflicts are detected. In that case, use the PR-based workflow instead.
+
+---
+
+## 📊 Workflow Comparison
+
+| Feature | PR-based Workflow | Direct Merge Workflow |
+|---------|-------------------|----------------------|
+| **Review before merge** | ✅ Yes (via PR) | ❌ No (auto-merges) |
+| **Conflict handling** | ✅ Creates PR with conflicts | ❌ Aborts on conflicts |
+| **Trigger** | Manual only | Manual only |
+| **Speed** | Slower (needs PR review) | ⚡ Instant |
+| **Safety** | 🛡️ High | ⚠️ Medium |
+| **Best for** | Production repos | Dev/Test repos |
+| **GitHub permissions** | Needs PR permission | Only needs write permission |
+
+---
 
 ## Setup Instructions
 

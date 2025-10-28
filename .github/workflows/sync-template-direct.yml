@@ -1,14 +1,13 @@
-name: 🔄 Sync with Template (Create PR for Review)
+name: ⚡ Sync with Template (Direct Merge - No Review)
 
 on:
   workflow_dispatch:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
-  sync-template:
+  sync-template-direct:
     runs-on: ubuntu-latest
     
     steps:
@@ -54,22 +53,18 @@ jobs:
           echo "has_updates=false" >> $GITHUB_OUTPUT
         fi
 
-    - name: Create pull request with updates
+    - name: Direct merge template updates
       id: sync-changes
       if: steps.check-updates.outputs.has_updates == 'true'
       run: |
         # Create an archive branch from current state before syncing
-        ARCHIVE_BRANCH="main-archive-$(date +%Y%m%d)"
+        ARCHIVE_BRANCH="main-archive-$(date +%Y%m%d-%H%M%S)"
         echo "Creating archive branch: $ARCHIVE_BRANCH"
         git checkout -b "$ARCHIVE_BRANCH"
         git push origin "$ARCHIVE_BRANCH"
         
         # Switch back to main for the sync
         git checkout main
-        
-        # Create a new branch for the sync
-        BRANCH_NAME="sync-ref-demo-template-$(date +%Y%m%d-%H%M%S)"
-        git checkout -b "$BRANCH_NAME"
         
         # Define files to ignore during sync (add your custom files here)
         IGNORE_FILES=(
@@ -93,11 +88,12 @@ jobs:
           echo "✅ Merge completed successfully"
           MERGE_STATUS="success"
         else
-          echo "⚠️ Merge failed - will create PR for manual resolution"
-          MERGE_STATUS="conflicts"
-          # Add all files including conflicted ones
-          git add .
-          git commit -m "WIP: Template sync with conflicts - needs manual resolution" || true
+          echo "❌ Merge failed - conflicts detected"
+          MERGE_STATUS="failed"
+          # Abort the merge
+          git merge --abort
+          echo "merge_status=failed" >> $GITHUB_OUTPUT
+          exit 1
         fi
         
         # Restore ignored files after merge
@@ -113,55 +109,45 @@ jobs:
         git add .
         git commit -m "Restore custom files after template sync" || true
         
-        # Push the branch
-        git push origin "$BRANCH_NAME"
+        # Push directly to main
+        git push origin main
         
-        # Store merge status for PR creation
-        echo "merge_status=$MERGE_STATUS" >> $GITHUB_OUTPUT
-        
-        # Create pull request using GitHub CLI with appropriate message
-        if [ "$MERGE_STATUS" = "conflicts" ]; then
-          PR_TITLE="⚠️ Sync template repository (HAS CONFLICTS) - $(date +%Y-%m-%d)"
-          PR_BODY="This PR syncs the latest changes from the template repository.
-          
-        **⚠️ MERGE CONFLICTS DETECTED**
-        
-        This PR contains merge conflicts that need to be resolved manually.
-        Please review the conflicts, resolve them, and then merge.
-        
-        **Template commit:** \`${{ steps.check-updates.outputs.template_commit }}\`
-        **Sync date:** $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)
-        **Archive branch:** \`$ARCHIVE_BRANCH\` (backup of state before sync)
-        
-        ## How to resolve conflicts:
-        1. Review the files with conflicts in the 'Files changed' tab
-        2. Click 'Resolve conflicts' button in GitHub UI
-        3. Edit the files to resolve conflicts
-        4. Mark as resolved and commit
-        5. Merge the PR"
-        else
-          PR_TITLE="🔄 Sync template repository - $(date +%Y-%m-%d)"
-          PR_BODY="This PR syncs the latest changes from the template repository.
-          
-        **✅ No conflicts detected**
-        
-        **Template commit:** \`${{ steps.check-updates.outputs.template_commit }}\`
-        **Sync date:** $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)
-        **Archive branch:** \`$ARCHIVE_BRANCH\` (backup of state before sync)
-        
-        Please review the changes and merge if everything looks good."
-        fi
-        
-        gh pr create \
-          --title "$PR_TITLE" \
-          --body "$PR_BODY" \
-          --base main \
-          --head "$BRANCH_NAME"
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        echo "merge_status=success" >> $GITHUB_OUTPUT
+        echo "archive_branch=$ARCHIVE_BRANCH" >> $GITHUB_OUTPUT
+
+    - name: Create summary
+      if: steps.check-updates.outputs.has_updates == 'true' && steps.sync-changes.outputs.merge_status == 'success'
+      run: |
+        echo "## ✅ Template Sync Completed Successfully" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Template commit:** \`${{ steps.check-updates.outputs.template_commit }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "**Sync date:** $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)" >> $GITHUB_STEP_SUMMARY
+        echo "**Archive branch:** \`${{ steps.sync-changes.outputs.archive_branch }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Changes have been directly merged to the main branch." >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Protected Files" >> $GITHUB_STEP_SUMMARY
+        echo "The following files were preserved during sync:" >> $GITHUB_STEP_SUMMARY
+        echo "- \`paths.json\`" >> $GITHUB_STEP_SUMMARY
+        echo "- \`fstab.yaml\`" >> $GITHUB_STEP_SUMMARY
+
+    - name: Merge failed notification
+      if: steps.check-updates.outputs.has_updates == 'true' && failure()
+      run: |
+        echo "## ❌ Template Sync Failed" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Reason:** Merge conflicts detected that could not be auto-resolved" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Recommendation" >> $GITHUB_STEP_SUMMARY
+        echo "Use the **'Sync Template Repository'** workflow instead, which creates a PR for manual review." >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "The repository state has been preserved (merge was aborted)." >> $GITHUB_STEP_SUMMARY
 
     - name: No updates available
       if: steps.check-updates.outputs.has_updates == 'false'
       run: |
-        echo "✅ No updates available from template repository"
-        echo "Current repository is up to date with template."
+        echo "## ✅ Repository Up to Date" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "No updates available from template repository." >> $GITHUB_STEP_SUMMARY
+        echo "Current repository is already in sync with template." >> $GITHUB_STEP_SUMMARY
+
