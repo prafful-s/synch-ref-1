@@ -32,15 +32,15 @@ jobs:
 
     - name: Add template repository as remote
       run: |
-        # Template repository: prafful-s/synch-main
+        # Template repository: AEMXSC/RefDemoEDS-Dev
         # Remove if exists (in case of reruns)
         git remote remove template 2>/dev/null || true
-        git remote add template https://github.com/prafful-s/synch-main.git
+        git remote add template https://github.com/AEMXSC/RefDemoEDS-Dev.git
         # Fetch only the main branch from template
         if ! git fetch template main; then
           echo "❌ Failed to fetch from template repository"
           echo "Please check:"
-          echo "  1. Template repository exists: https://github.com/prafful-s/synch-main"
+          echo "  1. Template repository exists: https://github.com/AEMXSC/RefDemoEDS-Dev"
           echo "  2. Repository is accessible (public or you have access)"
           echo "  3. Network connection is available"
           exit 1
