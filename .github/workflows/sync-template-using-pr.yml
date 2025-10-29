@@ -92,6 +92,7 @@ jobs:
         IGNORE_FILES=(
           "paths.json"
           "fstab.yaml"
+          ".github/workflows"
         )
         
         # Backup ignored files before merge
