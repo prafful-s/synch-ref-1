@@ -214,6 +214,7 @@ jobs:
         echo "The following files were preserved during sync:" >> $GITHUB_STEP_SUMMARY
         echo "- \`paths.json\`" >> $GITHUB_STEP_SUMMARY
         echo "- \`fstab.yaml\`" >> $GITHUB_STEP_SUMMARY
+        echo "- \`.github/workflows/\`" >> $GITHUB_STEP_SUMMARY
 
     - name: No changes to sync
       if: steps.check-updates.outputs.has_updates == 'true' && steps.sync-changes.outputs.merge_status == 'no_changes'

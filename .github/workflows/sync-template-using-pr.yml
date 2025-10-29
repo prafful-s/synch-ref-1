@@ -71,13 +71,6 @@ jobs:
         # Create an archive branch from current state before syncing
         ARCHIVE_BRANCH="main-archive-$(date +%Y%m%d-%H%M%S)"
         echo "Creating archive branch: $ARCHIVE_BRANCH"
-        
-        # Check if archive branch already exists
-        if git ls-remote --heads origin "$ARCHIVE_BRANCH" | grep -q "$ARCHIVE_BRANCH"; then
-          echo "⚠️ Archive branch already exists, using unique name"
-          ARCHIVE_BRANCH="main-archive-$(date +%Y%m%d-%H%M%S)-$$"
-        fi
-        
         git checkout -b "$ARCHIVE_BRANCH"
         git push origin "$ARCHIVE_BRANCH"
         
