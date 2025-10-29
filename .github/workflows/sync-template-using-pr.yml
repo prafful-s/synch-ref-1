@@ -33,9 +33,19 @@ jobs:
     - name: Add template repository as remote
       run: |
         # Template repository: prafful-s/synch-main
+        # Remove if exists (in case of reruns)
+        git remote remove template 2>/dev/null || true
         git remote add template https://github.com/prafful-s/synch-main.git
         # Fetch only the main branch from template
-        git fetch template main
+        if ! git fetch template main; then
+          echo "❌ Failed to fetch from template repository"
+          echo "Please check:"
+          echo "  1. Template repository exists: https://github.com/prafful-s/synch-main"
+          echo "  2. Repository is accessible (public or you have access)"
+          echo "  3. Network connection is available"
+          exit 1
+        fi
+        echo "✅ Successfully fetched template repository"
 
     - name: Check for updates
       id: check-updates
@@ -59,8 +69,15 @@ jobs:
       if: steps.check-updates.outputs.has_updates == 'true'
       run: |
         # Create an archive branch from current state before syncing
-        ARCHIVE_BRANCH="main-archive-$(date +%Y%m%d)"
+        ARCHIVE_BRANCH="main-archive-$(date +%Y%m%d-%H%M%S)"
         echo "Creating archive branch: $ARCHIVE_BRANCH"
+        
+        # Check if archive branch already exists
+        if git ls-remote --heads origin "$ARCHIVE_BRANCH" | grep -q "$ARCHIVE_BRANCH"; then
+          echo "⚠️ Archive branch already exists, using unique name"
+          ARCHIVE_BRANCH="main-archive-$(date +%Y%m%d-%H%M%S)-$$"
+        fi
+        
         git checkout -b "$ARCHIVE_BRANCH"
         git push origin "$ARCHIVE_BRANCH"
         
