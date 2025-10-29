@@ -18,13 +18,15 @@ Creates a **Pull Request** with template changes for review before merging.
 
 **Directly merges** template changes to main branch without creating a PR.
 
+**Smart Fallback:** If conflicts are detected, automatically creates a PR instead of failing.
+
 **Use when:**
 - You trust the template updates completely
 - You want quick syncing without PR overhead
 - Your repository has minimal customizations
 - You need faster updates without review process
 
-**⚠️ Caution:** This workflow will fail and abort if merge conflicts are detected. In that case, use the PR-based workflow instead.
+**✨ Best of Both Worlds:** Tries direct merge first, falls back to PR if needed.
 
 ---
 
@@ -33,12 +35,13 @@ Creates a **Pull Request** with template changes for review before merging.
 | Feature | PR-based Workflow | Direct Merge Workflow |
 |---------|-------------------|----------------------|
 | **Review before merge** | ✅ Yes (via PR) | ❌ No (auto-merges) |
-| **Conflict handling** | ✅ Creates PR with conflicts | ❌ Aborts on conflicts |
+| **Conflict handling** | ✅ Creates PR with conflicts | ✅ Auto-fallback to PR |
 | **Trigger** | Manual only | Manual only |
-| **Speed** | Slower (needs PR review) | ⚡ Instant |
-| **Safety** | 🛡️ High | ⚠️ Medium |
-| **Best for** | Production repos | Dev/Test repos |
-| **GitHub permissions** | Needs PR permission | Only needs write permission |
+| **Speed** | Slower (needs PR review) | ⚡ Instant (if no conflicts) |
+| **Safety** | 🛡️ High | 🛡️ High (with fallback) |
+| **Best for** | Production repos | Production & Dev repos |
+| **Workflow outcome** | Always creates PR | Direct merge OR PR (if conflicts) |
+| **GitHub permissions** | Needs PR permission | Needs PR permission |
 
 ---
 
