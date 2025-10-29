@@ -4,7 +4,7 @@ import { readBlockConfig } from '../../scripts/aem.js';
 
 /**
  *
- * @param {Element} block
+ * @param {Element} hero block
  */
 export default function decorate(block) {
   // Get the enable underline setting from the block content (3rd div)
@@ -67,3 +67,4 @@ export default function decorate(block) {
   }
 
 }
+
