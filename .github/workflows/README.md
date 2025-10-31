@@ -1,6 +1,6 @@
 # Template Sync Workflows
 
-This repository includes **two workflows** for syncing with the main template repository (`AEMXSC/RefDemoEDS`):
+This repository includes **two workflows** for syncing with the main template repository (`AEMXSC/RefDemoEDS-Dev`):
 
 ## 🔄 Workflow 1: Sync with Template (Create PR for Review)
 **File:** `sync-template-using-pr.yml`
@@ -55,7 +55,7 @@ This workflow is pre-configured to sync with the main template repository:
 git remote add template https://github.com/AEMXSC/RefDemoEDS-Dev.git
 ```
 
-If you created this repository using "Use this template" from `AEMXSC/RefDemoEDS`, no configuration changes are needed.
+If you created this repository using "Use this template" from `AEMXSC/RefDemoEDS-Dev`, no configuration changes are needed.
 
 ### 2. Enable GitHub Actions Permissions
 
@@ -85,7 +85,7 @@ Make sure your repository has the following settings:
 ## How It Works
 
 1. **Manual Trigger**: Trigger the workflow manually from the "Actions" tab in your repository
-2. **Update Check**: It fetches the latest changes from the template repository (`AEMXSC/RefDemoEDS`)
+2. **Update Check**: It fetches the latest changes from the template repository (`AEMXSC/RefDemoEDS-Dev`)
 3. **Smart Sync**: Only creates a pull request if there are actual updates
 4. **Smart Merge Strategy**: Uses `-X theirs` to prefer template changes, avoiding false conflicts
 5. **File Protection**: Preserves your custom files (`paths.json`, `fstab.yaml`) during sync
