@@ -62,10 +62,10 @@ function observeVideo(block, autoplay) {
           playButton.removeAttribute('tabindex');
           pauseButton.classList.remove('inactive');
           pauseButton.setAttribute('tabindex', 0); // hide 'play' button
-          videoPlayerEl.play(); // Play the video when it enters the viewport new update
+          videoPlayerEl.play(); // Play the video when it enters the viewport
         }
       } else {
-        videoPlayerEl.pause(); // Pause the video when it leaves the viewport new update
+        videoPlayerEl.pause(); // Pause the video when it leaves the viewport
       }
     });
   }, { threshold: 0.5 });

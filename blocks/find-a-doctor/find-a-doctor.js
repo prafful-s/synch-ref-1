@@ -758,7 +758,6 @@ export default async function decorate(block) {
   console.log('Creating header with title:', title);
   console.log('Creating header with subtitle:', subtitle);
   console.log('Data source info:', dataSourceInfo);
-  console.log('This is a sample log file to check workflow working.');
   
   header.innerHTML = `
     <h2 class="find-doctor-title">${title}</h2>
