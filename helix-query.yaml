@@ -24,9 +24,6 @@ indices:
       body:
         select: main
         value: textContent(el)
-      tags:
-        select: head > meta[name="cq-tags"]
-        value: attribute(el, "content")
       image:
         select: head > meta[property="og:image"]
         value: match(attribute(el, "content"), "^(https?:\/\/.*?(aem.live))+(.*)|^(.*)")

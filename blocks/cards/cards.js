@@ -17,7 +17,7 @@ export default function decorate(block) {
     // Read card style from the third div (index 2)
     const styleDiv = row.children[2];
     const styleParagraph = styleDiv?.querySelector('p');
-    const cardStyle = styleParagraph?.textContent?.trim() || 'default';
+    const cardStyle = styleParagraph?.textContent?.trim() || 'default';  //let me check synch move 2
     if (cardStyle && cardStyle !== 'default') {
       li.className = cardStyle;
     }

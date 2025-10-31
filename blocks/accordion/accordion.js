@@ -24,3 +24,6 @@ export default function decorate(block) {
     row.replaceWith(details);
   });
 }
+
+
+/* check for commentted code synch*/
