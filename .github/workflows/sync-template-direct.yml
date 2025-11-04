@@ -33,6 +33,8 @@ jobs:
     - name: Add template repository as remote
       run: |
         # Template repository: prafful-s/synch-main
+        # Remove if exists (in case of reruns)
+        git remote remove template 2>/dev/null || true
         git remote add template https://github.com/prafful-s/synch-main.git
         # Fetch only the main branch from template
         git fetch template main
@@ -71,7 +73,6 @@ jobs:
         IGNORE_FILES=(
           "paths.json"
           "fstab.yaml"
-          ".github/workflows"
         )
         
         # Backup ignored files before merge
