@@ -1,5 +1,4 @@
-# AEM Reference Demo (for Edge Delivery Service experience) Demo 1234
-
+# AEM Reference Demo (for Edge Delivery Service experience)
 **A customizable UI experience:**
 - Custom Themes (with and without code)
 - Dynamic Media Templates
